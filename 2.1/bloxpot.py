@@ -23,8 +23,18 @@ for line in reader:
     call_record.append(line)
     time.append(int(line['通信时长']))
 
-time.sort()
 time_len = len(time)
+time_avg = 0.0
+for t in time:
+    time_avg += t * 1.0 / time_len
+
+time_count = {}
+for t in time:
+    time_count[t] = time_count.get(t,0) + 1
+sorted_count=sorted(time_count.items(), key = itemgetter(1), reverse = True)
+time_mode = sorted_count[0][0]
+
+time.sort()
 time_min = time[0]
 time_q1 = time[int(time_len * 0.25)]
 time_median = median(time, time_len)
@@ -34,6 +44,15 @@ time_iqr = time_q3 - time_q1
 time_min_observation = time_q1 - 1.5 * time_iqr > time_min and time_q1 - 1.5 * time_iqr or time_min
 time_max_observation = time_q3 + 1.5 * time_iqr < time_max and time_q3 + 1.5 * time_iqr or time_max
 time_outlier = []
+
+print time_avg
+print time_median
+print time_mode
+print time_min
+print time_q1
+print time_median
+print time_q3
+print time_max
 
 for t in time:
     if t < time_min_observation or t > time_max_observation:

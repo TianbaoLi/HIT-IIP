@@ -78,6 +78,24 @@ def pearson(x,y):
 
     return (den == 0 and 0 or num / den)
 
+def chi_square(data, sumX, sumY):
+    dataMap = copy.deepcopy(data)
+    dataSumX = copy.deepcopy(sumX)
+    dataSumY = copy.deepcopy(sumY)
+    dataSum = 0
+    for x in dataSumX:
+        dataSum += dataSumX[x]
+
+    k = 0
+    for x in dataMap.keys():
+        for y in dataMap[x].keys():
+            if dataSumX[x] == 0 or dataSumY[y] == 0:
+                continue
+            k += 1.0 * dataMap[x][y] ** 2 / dataSumX[x] / dataSumY[y]
+    k -= 1
+    k *= dataSum
+    return k
+
 numControl = 40
 #Number of lines to be tested
 index = 0
@@ -89,10 +107,14 @@ for line in reader:
     data.append(line)
 
 data_missingHandeledByGlobal = missingHandler_global(data)
+#print data_missingHandeledByGlobal
 data_missingHandeledByAvg = missingHandler_avg(data)
+#print data_missingHandeledByAvg
 
 data_standardize_minmax = standardize_minmax(data_missingHandeledByAvg)
+#print data_standardize_minmax
 data_standardize_decimal= standardize_decimal(data_missingHandeledByAvg)
+#print data_standardize_decimal
 
 solarRadiation64 = []
 target157 = []
@@ -101,3 +123,18 @@ for x in data_standardize_decimal:
     target157.append(float(x["target_1_57"]))
 r_solarRadiation64_target157 = pearson(solarRadiation64, target157)
 print r_solarRadiation64_target157
+
+map_weekday_sampleBaroPressure52 = {"Monday":{}, "Tuesday":{}, "Wednesday":{}, "Thursday":{}, "Friday":{}, "Saturday":{}, "Sunday":{}}
+range_sampleBaroPressure52 = range(730, 772)
+range_sampleBaroPressure52.append(775)
+sum_weekday = {"Monday":0, "Tuesday":0, "Wednesday":0, "Thursday":0, "Friday":0, "Saturday":0, "Sunday":0}
+sum_sampleBaroPressure52 = {v:0 for v in range_sampleBaroPressure52}
+for x in map_weekday_sampleBaroPressure52.keys():
+    map_weekday_sampleBaroPressure52[x] = {v:0 for v in range_sampleBaroPressure52}
+
+for x in data_standardize_decimal:
+    map_weekday_sampleBaroPressure52[x["weekday"]][int(x["Sample.Baro.Pressure_52"])] += 1
+    sum_weekday[x["weekday"]] += 1
+    sum_sampleBaroPressure52[int(x["Sample.Baro.Pressure_52"])] += 1
+k_weekday_sampleBaroPressure52 = chi_square(map_weekday_sampleBaroPressure52, sum_weekday, sum_sampleBaroPressure52)
+print k_weekday_sampleBaroPressure52

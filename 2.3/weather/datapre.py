@@ -7,9 +7,9 @@ BASE_DIR = os.path.dirname(__file__)
 file_path = os.path.join(BASE_DIR, 'TrainingData.csv')
 reader = csv.DictReader(file(file_path,'rb'))
 data = []
-selectedAttr = 'target_11_1601'
+selectedAttrs = ['Solar.radiation_64', 'target_1_57', 'Sample.Baro.Pressure_52']
 
-def missingHandler_global(data):
+def missingHandler_global(data, selectedAttr):
     dataList = []
     dataList = copy.deepcopy(data)
     for x in dataList:
@@ -18,7 +18,7 @@ def missingHandler_global(data):
             #Selected transformaed number by www.kaggle.com
     return dataList
 
-def missingHandler_avg(data):
+def missingHandler_avg(data, selectedAttr):
     dataList = []
     dataList = copy.deepcopy(data)
     avg = 0.0
@@ -30,7 +30,7 @@ def missingHandler_avg(data):
         if x[selectedAttr] == 'NA':
             x[selectedAttr] = "%f" % avg
     return dataList
-def standardize_minmax(data):
+def standardize_minmax(data, selectedAttr):
     dataList = []
     dataList = copy.deepcopy(data)
     dataMin = 100.0
@@ -46,7 +46,7 @@ def standardize_minmax(data):
         x[selectedAttr] = "%.15f" % ((float(x[selectedAttr]) - dataMin) / (dataMax - dataMin) * (1 - 0) + 0)
     return dataList
 
-def standardize_decimal(data):
+def standardize_decimal(data, selectedAttr):
     dataList = []
     dataList = copy.deepcopy(data)
     dataMax = -100.0
@@ -59,6 +59,7 @@ def standardize_decimal(data):
 
     for x in dataList:
         x[selectedAttr] = "%.15f" % (float(x[selectedAttr]) / p)
+
     return dataList
 
 def pearson(x,y):
@@ -96,7 +97,9 @@ def chi_square(data, sumX, sumY):
     k *= dataSum
     return k
 
-numControl = 40
+
+
+numControl = 10000
 #Number of lines to be tested
 index = 0
 
@@ -106,14 +109,18 @@ for line in reader:
         break
     data.append(line)
 
-data_missingHandeledByGlobal = missingHandler_global(data)
+#data_missingHandeledByGlobal = missingHandler_global(data, 'Solar.radiation_64')
 #print data_missingHandeledByGlobal
-data_missingHandeledByAvg = missingHandler_avg(data)
+
+tmp = copy.deepcopy(data)
+for attr in selectedAttrs:
+    tmp = missingHandler_avg(tmp, attr)
+data_missingHandeledByAvg = copy.deepcopy(tmp)
 #print data_missingHandeledByAvg
 
-data_standardize_minmax = standardize_minmax(data_missingHandeledByAvg)
+#data_standardize_minmax = standardize_minmax(data_missingHandeledByAvg, 'Solar.radiation_64')
 #print data_standardize_minmax
-data_standardize_decimal= standardize_decimal(data_missingHandeledByAvg)
+data_standardize_decimal= standardize_decimal(data_missingHandeledByAvg, 'Solar.radiation_64')
 #print data_standardize_decimal
 
 solarRadiation64 = []
@@ -133,8 +140,11 @@ for x in map_weekday_sampleBaroPressure52.keys():
     map_weekday_sampleBaroPressure52[x] = {v:0 for v in range_sampleBaroPressure52}
 
 for x in data_standardize_decimal:
-    map_weekday_sampleBaroPressure52[x["weekday"]][int(x["Sample.Baro.Pressure_52"])] += 1
-    sum_weekday[x["weekday"]] += 1
-    sum_sampleBaroPressure52[int(x["Sample.Baro.Pressure_52"])] += 1
+    try:
+        map_weekday_sampleBaroPressure52[x["weekday"]][int(x["Sample.Baro.Pressure_52"])] += 1
+        sum_weekday[x["weekday"]] += 1
+        sum_sampleBaroPressure52[int(x["Sample.Baro.Pressure_52"])] += 1
+    except ValueError:
+        pass
 k_weekday_sampleBaroPressure52 = chi_square(map_weekday_sampleBaroPressure52, sum_weekday, sum_sampleBaroPressure52)
 print k_weekday_sampleBaroPressure52

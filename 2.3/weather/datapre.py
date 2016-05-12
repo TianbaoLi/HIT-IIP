@@ -61,6 +61,23 @@ def standardize_decimal(data):
         x[selectedAttr] = "%.15f" % (float(x[selectedAttr]) / p)
     return dataList
 
+def pearson(x,y):
+    n = len(x)
+    vals = range(n)
+
+    sumx = sum([float(x[i]) for i in vals])
+    sumy = sum([float(y[i]) for i in vals])
+
+    sumxSq = sum([x[i] ** 2.0 for i in vals])
+    sumySq = sum([y[i] ** 2.0 for i in vals])
+
+    pSum = sum([x[i] * y[i] for i in vals])
+
+    num = pSum - (sumx * sumy / n)
+    den = ((sumxSq - pow(sumx, 2) / n) * (sumySq - pow(sumy, 2) / n)) ** 0.5
+
+    return (den == 0 and 0 or num / den)
+
 numControl = 40
 #Number of lines to be tested
 index = 0
@@ -77,5 +94,10 @@ data_missingHandeledByAvg = missingHandler_avg(data)
 data_standardize_minmax = standardize_minmax(data_missingHandeledByAvg)
 data_standardize_decimal= standardize_decimal(data_missingHandeledByAvg)
 
-#for x in data_standardize_decimal:
-#    print x[selectedAttr]
+solarRadiation64 = []
+target157 = []
+for x in data_standardize_decimal:
+    solarRadiation64.append(float(x["Solar.radiation_64"]))
+    target157.append(float(x["target_1_57"]))
+r_solarRadiation64_target157 = pearson(solarRadiation64, target157)
+print r_solarRadiation64_target157

@@ -105,8 +105,8 @@ index = 0
 
 for line in reader:
     index += 1
-    if index > numControl:
-        break
+    #if index > numControl:
+    #    break
     data.append(line)
 
 #data_missingHandeledByGlobal = missingHandler_global(data, 'Solar.radiation_64')

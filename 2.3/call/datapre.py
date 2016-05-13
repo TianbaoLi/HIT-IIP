@@ -57,3 +57,6 @@ for x in relationship:
 
 #print callTime
 #print relationship
+
+r = pearson(callTime.values(), relationship.values())
+print r

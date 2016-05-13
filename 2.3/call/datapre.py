@@ -3,6 +3,7 @@
 import os
 import csv
 import json
+import copy
 from operator import itemgetter
 
 BASE_DIR = os.path.dirname(__file__)
@@ -60,3 +61,22 @@ for x in relationship:
 
 r = pearson(callTime.values(), relationship.values())
 print r
+
+range_callTime = []
+for x in callTime.values():
+    if x not in range_callTime:
+        range_callTime.append(x)
+map_relationship_callTime = {1:{}, -1:{}}
+sum_relationship = {1:0, -1:0}
+sum_callTime = {v:0 for v in range_callTime}
+for x in map_relationship_callTime.keys():
+    map_relationship_callTime[x] = {v:0 for v in range_callTime}
+for x in callTime.keys():
+    try:
+        map_relationship_callTime[relationship[x]][callTime[x]] += 1
+        sum_relationship[relationship[x]] += 1
+        sum_callTime[callTime[x]] += 1
+    except ValueError:
+        pass
+k = chi_square(map_relationship_callTime, sum_relationship, sum_callTime)
+print k

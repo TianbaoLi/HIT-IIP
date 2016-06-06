@@ -86,13 +86,16 @@ public:
             return false;
         else
         {
+            bool flag;
             for(map<pair<string, string>, int>::iterator iter = pathMap.begin(); iter != pathMap.end(); iter++)
                 if(iter->first.first == node && find(explored.begin(), explored.end(), iter->first.second) == explored.end())
                 {
-                    bool flag = R_DLS(iter->first.second, pathMap, solution, limit - 1, end, explored);
+                    flag = R_DLS(iter->first.second, pathMap, solution, limit - 1, end, explored);
                     if(flag == true)
                         return true;
                 }
+            if(flag == false)
+                return false;
         }
         return false;
     }
@@ -124,13 +127,13 @@ int main()
         cout<<*iter<<ends;
     cout<<endl;
 
-    vector<string> resultDFSRomania = mySearch->DFS("Romania", "Arad", "Bucharest", 6);
+    vector<string> resultDFSRomania = mySearch->DFS("Romania", "Arad", "Bucharest", 3);
     cout<<"DFS:Romania:"<<endl;
     for(vector<string>::iterator iter = resultDFSRomania.begin(); iter != resultDFSRomania.end(); iter++)
         cout<<*iter<<ends;
     cout<<endl;
 
-    vector<string> resultDFSHIT = mySearch->DFS("HIT", "ZhengxinBuilding", "ChengyiBuilding", 6);
+    vector<string> resultDFSHIT = mySearch->DFS("HIT", "ZhengxinBuilding", "ChengyiBuilding", 3);
     cout<<"DFS:HIT:"<<endl;
     for(vector<string>::iterator iter = resultDFSHIT.begin(); iter != resultDFSHIT.end(); iter++)
         cout<<*iter<<ends;

@@ -3,6 +3,7 @@
 #include<map>
 #include<algorithm>
 #include<vector>
+#include<stack>
 using namespace std;
 
 const int NODEN = 30;
@@ -34,19 +35,23 @@ public:
         }
     }
 
+    map<pair<string, string>, int> chooseMap(string choice)
+    {
+        map<pair<string, string>, int> temMap;
+        if(choice == "Romania")
+            for(map<pair<string, string>, int>::iterator iter = mapRomania.begin(); iter != mapRomania.end(); iter++)
+                temMap.insert(*iter);
+        else if(choice == "HIT")
+            for(map<pair<string, string>, int>::iterator iter = mapHIT.begin(); iter != mapHIT.end(); iter++)
+                temMap.insert(*iter);
+        return temMap;
+    }
+
     vector<string> BFS(string question, string start)
     {
         vector<string> solution;
         map<pair<string, string>, int> pathMap;
-        if(question == "Romania")
-            for(map<pair<string, string>, int>::iterator iter = mapRomania.begin(); iter != mapRomania.end(); iter++)
-                pathMap.insert(*iter);
-        else if(question == "HIT")
-            for(map<pair<string, string>, int>::iterator iter = mapHIT.begin(); iter != mapHIT.end(); iter++)
-                pathMap.insert(*iter);
-        else
-            return solution;
-
+        pathMap = chooseMap(question);
         vector<string> frontier;
         frontier.push_back(start);
         vector<string> explored;
@@ -64,9 +69,39 @@ public:
                 if(iter->first.first == current)
                     if(find(frontier.begin(), frontier.end(), iter->first.second) == frontier.end() &&
                         find(explored.begin(), explored.end(), iter->first.second) == explored.end())
-
                             frontier.push_back(iter->first.second);
         }
+    }
+
+    bool R_DLS(string node, map<pair<string, string>, int> pathMap, vector<string> &solution, int limit, string end, vector<string> explored)
+    {
+        solution.push_back(node);
+        explored.push_back(node);
+        if(node == end)
+            return true;
+        else if (limit == 0)
+            return false;
+        else
+        {
+            for(map<pair<string, string>, int>::iterator iter = pathMap.begin(); iter != pathMap.end(); iter++)
+                if(iter->first.first == node && find(explored.begin(), explored.end(), iter->first.second) == explored.end())
+                {
+                    bool flag = R_DLS(iter->first.second, pathMap, solution, limit - 1, end, explored);
+                    if(flag == true)
+                        return true;
+                }
+        }
+        return false;
+    }
+
+    vector<string> DFS(string question, string start, string end, int limit)
+    {
+        vector<string> solution;
+        vector<string> explored;
+        map<pair<string, string>, int> pathMap;
+        pathMap = chooseMap(question);
+        R_DLS(start, pathMap, solution, limit, end, explored);
+        return solution;
     }
 };
 
@@ -83,6 +118,18 @@ int main()
     vector<string> resultBFSHIT = mySearch->BFS("HIT", "ZhengxinBuilding");
     cout<<"BFS:HIT:"<<endl;
     for(vector<string>::iterator iter = resultBFSHIT.begin(); iter != resultBFSHIT.end(); iter++)
+        cout<<*iter<<ends;
+    cout<<endl;
+
+    vector<string> resultDFSRomania = mySearch->DFS("Romania", "Arad", "Bucharest", 6);
+    cout<<"DFS:Romania:"<<endl;
+    for(vector<string>::iterator iter = resultDFSRomania.begin(); iter != resultDFSRomania.end(); iter++)
+        cout<<*iter<<ends;
+    cout<<endl;
+
+    vector<string> resultDFSHIT = mySearch->DFS("HIT", "ZhengxinBuilding", "ChengyiBuilding", 6);
+    cout<<"DFS:HIT:"<<endl;
+    for(vector<string>::iterator iter = resultDFSHIT.begin(); iter != resultDFSHIT.end(); iter++)
         cout<<*iter<<ends;
     cout<<endl;
 

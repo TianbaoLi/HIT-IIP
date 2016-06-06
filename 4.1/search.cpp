@@ -7,6 +7,7 @@
 using namespace std;
 
 const int NODEN = 30;
+const int MAXINT = 0xffffffff;
 
 class Search
 {
@@ -109,6 +110,21 @@ public:
         R_DLS(start, pathMap, solution, limit, end, explored);
         return solution;
     }
+
+    vector<string> IDS(string question, string start, string end, int limit)
+    {
+        map<pair<string, string>, int> pathMap;
+        pathMap = chooseMap(question);
+        for(int d = 0; d < MAXINT; d++)
+        {
+            vector<string> solution;
+            vector<string> explored;
+            bool success = false;
+            success = R_DLS(start, pathMap, solution, d, end, explored);
+            if(success)
+                return solution;
+        }
+    }
 };
 
 int main()
@@ -133,11 +149,22 @@ int main()
         cout<<*iter<<ends;
     cout<<endl;
 
-    vector<string> resultDFSHIT = mySearch->DFS("HIT", "ZhengxinBuilding", "ChengyiBuilding", 3);
+    vector<string> resultDFSHIT = mySearch->DFS("HIT", "ZhengxinBuilding", "ChengyiBuilding", 5);
     cout<<"DFS:HIT:"<<endl;
     for(vector<string>::iterator iter = resultDFSHIT.begin(); iter != resultDFSHIT.end(); iter++)
         cout<<*iter<<ends;
     cout<<endl;
 
+    vector<string> resultIDSRomania = mySearch->DFS("Romania", "Arad", "Bucharest", 5);
+    cout<<"IDS:Romania:"<<endl;
+    for(vector<string>::iterator iter = resultIDSRomania.begin(); iter != resultIDSRomania.end(); iter++)
+        cout<<*iter<<ends;
+    cout<<endl;
+
+    vector<string> resultIDSHIT = mySearch->DFS("HIT", "ZhengxinBuilding", "ChengyiBuilding", 3);
+    cout<<"IDS:HIT:"<<endl;
+    for(vector<string>::iterator iter = resultIDSHIT.begin(); iter != resultIDSHIT.end(); iter++)
+        cout<<*iter<<ends;
+    cout<<endl;
     return 0;
 }

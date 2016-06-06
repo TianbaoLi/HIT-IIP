@@ -47,7 +47,7 @@ public:
         return temMap;
     }
 
-    vector<string> BFS(string question, string start)
+    vector<string> BFS(string question, string start, string end)
     {
         vector<string> solution;
         map<pair<string, string>, int> pathMap;
@@ -64,6 +64,9 @@ public:
             frontier.erase(frontier.begin());
             explored.push_back(current);
             solution.push_back(current);
+
+            if(current == end)
+                return solution;
 
             for(map<pair<string, string>, int>::iterator iter = pathMap.begin(); iter != pathMap.end(); iter++)
                 if(iter->first.first == current)
@@ -109,13 +112,13 @@ int main()
 {
     Search *mySearch = new Search();
 
-    vector<string> resultBFSRomania = mySearch->BFS("Romania", "Arad");
+    vector<string> resultBFSRomania = mySearch->BFS("Romania", "Arad", "Bucharest");
     cout<<"BFS:Romania:"<<endl;
     for(vector<string>::iterator iter = resultBFSRomania.begin(); iter != resultBFSRomania.end(); iter++)
         cout<<*iter<<ends;
     cout<<endl;
 
-    vector<string> resultBFSHIT = mySearch->BFS("HIT", "ZhengxinBuilding");
+    vector<string> resultBFSHIT = mySearch->BFS("HIT", "ZhengxinBuilding", "ChengyiBuilding");
     cout<<"BFS:HIT:"<<endl;
     for(vector<string>::iterator iter = resultBFSHIT.begin(); iter != resultBFSHIT.end(); iter++)
         cout<<*iter<<ends;

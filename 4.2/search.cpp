@@ -114,22 +114,88 @@ public:
                 }
         }
     }
+
+    vector<string> ATraversal(string question, string start)
+    {
+        vector<string> solution;
+        map<pair<string, string>, int> pathMap;
+        map<string, int> pathSLD;
+        chooseMap(question, pathMap, pathSLD);
+        map<string, int> frontier;
+        vector<string> explored;
+        frontier[start] = 0;
+
+        while(1)
+        {
+            if(frontier.empty())
+                return solution;
+
+            for(map<string, int>::iterator iter = frontier.begin(); iter != frontier.end(); iter++)
+                iter->second += pathSLD[iter->first];
+            map<string, int>::iterator minNode = frontier.begin();
+            for(map<string, int>::iterator iter = frontier.begin(); iter != frontier.end(); iter++)
+                if(iter->second < minNode->second)
+                    minNode = iter;
+            string current = minNode->first;
+            int d = minNode->second - pathSLD[minNode->first];
+            frontier.erase(minNode);
+            for(map<string, int>::iterator iter = frontier.begin(); iter != frontier.end(); iter++)
+                iter->second -= pathSLD[iter->first];
+            explored.push_back(current);
+            solution.push_back(current);
+
+            if(explored.size() == pathSLD.size())
+                return solution;
+
+            for(map<pair<string, string>, int>::iterator iter = pathMap.begin(); iter != pathMap.end(); iter++)
+                if(iter->first.first == current)
+                {
+                    if(frontier.find(iter->first.second) == frontier.end() &&
+                        find(explored.begin(), explored.end(), iter->first.second) == explored.end())
+                            frontier[iter->first.second] = d + iter->second;
+                    else
+                    {
+                        map<string, int>::iterator child = frontier.find(iter->first.second);
+                        if(child != frontier.end() && child->second > d + iter->second)
+                            child->second = d + iter->second;
+                    }
+                }
+        }
+    }
 };
 
 int main()
 {
     Search *mySearch = new Search();
 
-    vector<string> resultASearchRomania = mySearch->ASearch("Romania", "Arad", "Bucharest");
-    cout<<"ASearch:Romania:"<<endl;
-    for(vector<string>::iterator iter = resultASearchRomania.begin(); iter != resultASearchRomania.end(); iter++)
+    vector<string> resultASearchRomania1 = mySearch->ASearch("Romania", "Arad", "Bucharest");
+    cout<<"ASearch:Romania:Arad-Bucharest"<<endl;
+    for(vector<string>::iterator iter = resultASearchRomania1.begin(); iter != resultASearchRomania1.end(); iter++)
         cout<<*iter<<ends;
-    cout<<endl;
+    cout<<endl<<endl;
+
+    vector<string> resultASearchRomania2 = mySearch->ASearch("Romania", "Craiova", "Bucharest");
+    cout<<"ASearch:Romania:Craiova-Bucharest"<<endl;
+    for(vector<string>::iterator iter = resultASearchRomania2.begin(); iter != resultASearchRomania2.end(); iter++)
+        cout<<*iter<<ends;
+    cout<<endl<<endl;
+
+    vector<string> resultASearchRomania3 = mySearch->ASearch("Romania", "Lugoj", "Bucharest");
+    cout<<"ASearch:Romania:Lugoj-Bucharest"<<endl;
+    for(vector<string>::iterator iter = resultASearchRomania3.begin(); iter != resultASearchRomania3.end(); iter++)
+        cout<<*iter<<ends;
+    cout<<endl<<endl;
 
     vector<string> resultASearchHIT = mySearch->ASearch("HIT", "ZhengxinBuilding", "ChengyiBuilding");
-    cout<<"ASearch:HIT:"<<endl;
+    cout<<"ASearch:HIT:ZhengxinBuilding-ChengyiBuilding"<<endl;
     for(vector<string>::iterator iter = resultASearchHIT.begin(); iter != resultASearchHIT.end(); iter++)
         cout<<*iter<<ends;
-    cout<<endl;
+    cout<<endl<<endl;
+
+    vector<string> resultATraversalRomania = mySearch->ATraversal("Romania", "Arad");
+    cout<<"ATraversal:Romania:Arad"<<endl;
+    for(vector<string>::iterator iter = resultATraversalRomania.begin(); iter != resultATraversalRomania.end(); iter++)
+        cout<<*iter<<ends;
+    cout<<endl<<endl;
     return 0;
 }

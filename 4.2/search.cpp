@@ -7,19 +7,22 @@
 using namespace std;
 
 const int NODEN = 30;
-const int MAXINT = 2147483647;
 
 class Search
 {
 private:
     map<pair<string, string>, int> mapRomania;
     map<pair<string, string>, int> mapHIT;
+    map<string, int> SLDRomania;
+    map<string, int> SLDHIT;
 
 public:
     Search()
     {
         ifstream inRomania("Romania.dat");
         ifstream inHIT("HIT.dat");
+        ifstream inSLDRomania("SLD_Romania.dat");
+        ifstream inSLDHIT("SLD_HIT.dat");
         string node1, node2;
         int len;
         while(!inRomania.eof())
@@ -34,35 +37,62 @@ public:
             mapHIT[pair<string, string>(node1, node2)] = len;
             mapHIT[pair<string, string>(node2, node1)] = len;
         }
+        while(!inSLDRomania.eof())
+        {
+            inSLDRomania>>node1>>len;
+            SLDRomania[node1] = len;
+        }
+        while(!inSLDHIT.eof())
+        {
+            inSLDHIT>>node1>>len;
+            SLDHIT[node1] = len;
+        }
     }
 
-    map<pair<string, string>, int> chooseMap(string choice)
+    void chooseMap(string choice, map<pair<string, string>, int> &temMap, map<string, int> &tmpSLD)
     {
-        map<pair<string, string>, int> temMap;
         if(choice == "Romania")
+        {
             for(map<pair<string, string>, int>::iterator iter = mapRomania.begin(); iter != mapRomania.end(); iter++)
                 temMap.insert(*iter);
+            for(map<string, int>::iterator iter = SLDRomania.begin(); iter != SLDRomania.end(); iter++)
+                tmpSLD.insert(*iter);
+        }
         else if(choice == "HIT")
+        {
             for(map<pair<string, string>, int>::iterator iter = mapHIT.begin(); iter != mapHIT.end(); iter++)
                 temMap.insert(*iter);
-        return temMap;
+            for(map<string, int>::iterator iter = SLDHIT.begin(); iter != SLDHIT.end(); iter++)
+                tmpSLD.insert(*iter);
+        }
     }
 
-    vector<string> BFS(string question, string start, string end)
+    vector<string> ASearch(string question, string start, string end)
     {
         vector<string> solution;
         map<pair<string, string>, int> pathMap;
-        pathMap = chooseMap(question);
-        vector<string> frontier;
-        frontier.push_back(start);
+        map<string, int> pathSLD;
+        chooseMap(question, pathMap, pathSLD);
+        map<string, int> frontier;
         vector<string> explored;
+        frontier[start] = 0;
 
         while(1)
         {
             if(frontier.empty())
                 return solution;
-            string current = *(frontier.begin());
-            frontier.erase(frontier.begin());
+
+            for(map<string, int>::iterator iter = frontier.begin(); iter != frontier.end(); iter++)
+                iter->second += pathSLD[iter->first];
+            map<string, int>::iterator minNode = frontier.begin();
+            for(map<string, int>::iterator iter = frontier.begin(); iter != frontier.end(); iter++)
+                if(iter->second < minNode->second)
+                    minNode = iter;
+            string current = minNode->first;
+            int d = minNode->second - pathSLD[minNode->first];
+            frontier.erase(minNode);
+            for(map<string, int>::iterator iter = frontier.begin(); iter != frontier.end(); iter++)
+                iter->second -= pathSLD[iter->first];
             explored.push_back(current);
             solution.push_back(current);
 
@@ -71,60 +101,17 @@ public:
 
             for(map<pair<string, string>, int>::iterator iter = pathMap.begin(); iter != pathMap.end(); iter++)
                 if(iter->first.first == current)
-                    if(find(frontier.begin(), frontier.end(), iter->first.second) == frontier.end() &&
-                        find(explored.begin(), explored.end(), iter->first.second) == explored.end())
-                            frontier.push_back(iter->first.second);
-        }
-    }
-
-    bool R_DLS(string node, map<pair<string, string>, int> pathMap, vector<string> &solution, int limit, string end, vector<string> explored)
-    {
-        solution.push_back(node);
-        explored.push_back(node);
-        if(node == end)
-            return true;
-        else if (limit == 0)
-            return false;
-        else
-        {
-            bool flag;
-            for(map<pair<string, string>, int>::iterator iter = pathMap.begin(); iter != pathMap.end(); iter++)
-                if(iter->first.first == node && find(explored.begin(), explored.end(), iter->first.second) == explored.end())
                 {
-                    flag = R_DLS(iter->first.second, pathMap, solution, limit - 1, end, explored);
-                    if(flag == true)
-                        return true;
+                    if(frontier.find(iter->first.second) == frontier.end() &&
+                        find(explored.begin(), explored.end(), iter->first.second) == explored.end())
+                            frontier[iter->first.second] = d + iter->second;
+                    else
+                    {
+                        map<string, int>::iterator child = frontier.find(iter->first.second);
+                        if(child != frontier.end() && child->second > d + iter->second)
+                            child->second = d + iter->second;
+                    }
                 }
-            if(flag == false)
-                return false;
-        }
-        return false;
-    }
-
-    vector<string> DFS(string question, string start, string end, int limit)
-    {
-        vector<string> solution;
-        vector<string> explored;
-        map<pair<string, string>, int> pathMap;
-        pathMap = chooseMap(question);
-        R_DLS(start, pathMap, solution, limit, end, explored);
-        return solution;
-    }
-
-    vector<string> IDS(string question, string start, string end)
-    {
-        map<pair<string, string>, int> pathMap;
-        pathMap = chooseMap(question);
-        for(int d = 1; d < MAXINT; d++)
-        {
-            vector<string> solution;
-            solution.clear();
-            vector<string> explored;
-            explored.clear();
-            bool success = false;
-            success = R_DLS(start, pathMap, solution, d, end, explored);
-            if(success == true)
-                return solution;
         }
     }
 };
@@ -133,39 +120,15 @@ int main()
 {
     Search *mySearch = new Search();
 
-    vector<string> resultBFSRomania = mySearch->BFS("Romania", "Arad", "Bucharest");
-    cout<<"BFS:Romania:"<<endl;
-    for(vector<string>::iterator iter = resultBFSRomania.begin(); iter != resultBFSRomania.end(); iter++)
+    vector<string> resultASearchRomania = mySearch->ASearch("Romania", "Arad", "Bucharest");
+    cout<<"ASearch:Romania:"<<endl;
+    for(vector<string>::iterator iter = resultASearchRomania.begin(); iter != resultASearchRomania.end(); iter++)
         cout<<*iter<<ends;
     cout<<endl;
 
-    vector<string> resultBFSHIT = mySearch->BFS("HIT", "ZhengxinBuilding", "ChengyiBuilding");
-    cout<<"BFS:HIT:"<<endl;
-    for(vector<string>::iterator iter = resultBFSHIT.begin(); iter != resultBFSHIT.end(); iter++)
-        cout<<*iter<<ends;
-    cout<<endl;
-
-    vector<string> resultDFSRomania = mySearch->DFS("Romania", "Arad", "Bucharest", 3);
-    cout<<"DFS:Romania:"<<endl;
-    for(vector<string>::iterator iter = resultDFSRomania.begin(); iter != resultDFSRomania.end(); iter++)
-        cout<<*iter<<ends;
-    cout<<endl;
-
-    vector<string> resultDFSHIT = mySearch->DFS("HIT", "ZhengxinBuilding", "ChengyiBuilding", 5);
-    cout<<"DFS:HIT:"<<endl;
-    for(vector<string>::iterator iter = resultDFSHIT.begin(); iter != resultDFSHIT.end(); iter++)
-        cout<<*iter<<ends;
-    cout<<endl;
-
-    vector<string> resultIDSRomania = mySearch->IDS("Romania", "Arad", "Bucharest");
-    cout<<"IDS:Romania:"<<endl;
-    for(vector<string>::iterator iter = resultIDSRomania.begin(); iter != resultIDSRomania.end(); iter++)
-        cout<<*iter<<ends;
-    cout<<endl;
-
-    vector<string> resultIDSHIT = mySearch->IDS("HIT", "ZhengxinBuilding", "ChengyiBuilding");
-    cout<<"IDS:HIT:"<<endl;
-    for(vector<string>::iterator iter = resultIDSHIT.begin(); iter != resultIDSHIT.end(); iter++)
+    vector<string> resultASearchHIT = mySearch->ASearch("HIT", "ZhengxinBuilding", "ChengyiBuilding");
+    cout<<"ASearch:HIT:"<<endl;
+    for(vector<string>::iterator iter = resultASearchHIT.begin(); iter != resultASearchHIT.end(); iter++)
         cout<<*iter<<ends;
     cout<<endl;
     return 0;

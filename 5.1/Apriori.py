@@ -71,6 +71,6 @@ def Apriori(data, support):
     return result
 
 if __name__ == '__main__':
-    data = load_data('item.dat')
+    data = load_data('homework.dat')
     result = Apriori(data, min_sup_count)
     print result

@@ -74,14 +74,14 @@ class ItemNode
 private:
     char item;
     int amount;
-    ItemNode *next;
+    vector<FPTreeNode> nodeOnTree;
 
 public:
     ItemNode(char aItem, int aAmount)
     {
         item = aItem;
         amount = aAmount;
-        next = NULL;
+        nodeOnTree.clear();
     }
 
     char getItem()
@@ -112,6 +112,17 @@ public:
             return itemAmount[a] > itemAmount[b];
         else
             return a < b;
+    }
+
+    void addTreeNode(FPTreeNode node)
+    {
+        nodeOnTree.push_back(node);
+    }
+
+    void showTreeNode()
+    {
+        for(vector<FPTreeNode>::iterator iter = nodeOnTree.begin(); iter != nodeOnTree.end(); iter ++)
+            cout<<(*iter).getItem()<<ends<<(*iter).getFrequency()<<endl;
     }
 
 };
@@ -217,14 +228,12 @@ public:
                 {
                     next->raiseFrequency(1);
                     current = next;
-                    cout<<"EXIST:"<<current->getItem()<<ends<<current->getFrequency()<<endl;
                 }
                 else
                 {
                     next = new FPTreeNode(*j, 1);
                     current->addNext(next);
                     current = next;
-                    cout<<"NOT EXIST:"<<current->getItem()<<ends<<current->getFrequency()<<endl;
                 }
             }
         }
@@ -233,9 +242,18 @@ public:
 
     void TraverseFPTree(FPTreeNode* current)
     {
-        cout<<current->getItem()<<ends<<current->getFrequency()<<endl;
+        //cout<<current->getItem()<<ends<<current->getFrequency()<<endl;
+        for(vector<ItemNode>::iterator iter = itemHeadList.begin(); iter != itemHeadList.end(); iter ++)
+            if((*iter).getItem() == current->getItem())
+                (*iter).addTreeNode(*current);
         for(int i = 0; i <= current->getNextAmount(); i ++)
             TraverseFPTree(current->getNextNode(i));
+    }
+
+    void showItemHeadList()
+    {
+        for(vector<ItemNode>::iterator iter = itemHeadList.begin(); iter != itemHeadList.end(); iter ++)
+            (*iter).showTreeNode();
     }
 };
 
@@ -245,5 +263,6 @@ int main()
     fp->MeetSupport(MIN_SUP_COUNT);
     fp->BuildFPTree();
     fp->TraverseFPTree(fp->getFPTreeHead());
+    fp->showItemHeadList();
     return 0;
 }

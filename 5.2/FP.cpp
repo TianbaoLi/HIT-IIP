@@ -1,25 +1,30 @@
 #include<iostream>
 #include<fstream>
 #include<vector>
+#include<map>
+#include<cstring>
 #include<cstdlib>
 #include<algorithm>
 using namespace std;
 
 const int MIN_SUP_COUNT = 3;
+const int MAX_NODE_AMOUNT = 20;
 
 class FPTreeNode
 {
 private:
     char item;
     int frequency;
-    vector<FPTreeNode*> next;
+    FPTreeNode* next[MAX_NODE_AMOUNT];
+    int nextAmount;
 
 public:
     FPTreeNode(char aItem, char aFrequency)
     {
         item = aItem;
         frequency = aFrequency;
-        next.clear();
+        memset(next, 0, sizeof(next));
+        nextAmount = -1;
     }
 
     char getItem()
@@ -31,7 +36,38 @@ public:
     {
         return frequency;
     }
+
+    void raiseFrequency(int delta)
+    {
+        frequency += delta;
+    }
+
+    int getNextAmount()
+    {
+        return nextAmount;
+    }
+
+    FPTreeNode* isExisted(char aItem)
+    {
+        for(int i = 0; i <= nextAmount; i ++)
+            if(next[i]->getItem() == aItem)
+                return next[i];
+        return NULL;
+    }
+
+    void addNext(FPTreeNode* node)
+    {
+        nextAmount += 1;
+        next[nextAmount] = node;
+    }
+
+    FPTreeNode* getNextNode(int index)
+    {
+        return next[index];
+    }
 };
+
+map<char, int> itemAmount;
 
 class ItemNode
 {
@@ -69,6 +105,15 @@ public:
             return a.getAmount() > b.getAmount();
         else return a.getItem() < b.getItem();
     }
+
+    static bool itemListCmpByFrequency(char a,char b)
+    {
+        if(itemAmount[a] != itemAmount[b])
+            return itemAmount[a] > itemAmount[b];
+        else
+            return a < b;
+    }
+
 };
 
 class FP
@@ -76,11 +121,12 @@ class FP
 private:
     vector<vector<char> > items;
     vector<ItemNode> itemHeadList;
+    FPTreeNode *FPHead;
+
 public:
     FP(string dataFile)
     {
         ifstream inData(dataFile.c_str());
-        cout<<dataFile.c_str()<<endl;
         if(!inData)
         {
             cout<<inData<<ends;
@@ -130,7 +176,66 @@ public:
         }
         sort(itemHeadList.begin(), itemHeadList.end(), ItemNode::itemNodeCmp);
         for(vector<ItemNode>::iterator iter = itemHeadList.begin(); iter != itemHeadList.end(); iter ++)
-            cout<<(*iter).getItem()<<ends<<(*iter).getAmount()<<endl;
+            itemAmount[(*iter).getItem()] = (*iter).getAmount();
+
+        for(vector<vector<char> >::iterator i = items.begin(); i != items.end(); i++)
+            for(vector<char>::iterator j = (*i).begin(); j != (*i).end(); j++)
+            {
+                bool itemExist = false;
+                for(vector<ItemNode>::iterator k = itemHeadList.begin(); k != itemHeadList.end(); k++)
+                    if(*j == (*k).getItem())
+                    {
+                        itemExist = true;
+                        break;
+                    }
+                if(itemExist == false)
+                {
+                    (*i).erase(j);
+                    j --;
+                }
+            }
+        for(vector<vector<char> >::iterator i = items.begin(); i != items.end(); i++)
+            sort((*i).begin(), (*i).end(), ItemNode::itemListCmpByFrequency);
+    }
+
+    FPTreeNode* getFPTreeHead()
+    {
+        return FPHead;
+    }
+
+    FPTreeNode* BuildFPTree()
+    {
+        FPHead = new FPTreeNode('\0', 0);
+        FPTreeNode* current = FPHead;
+        for(vector<vector<char> >::iterator i = items.begin(); i != items.end(); i++)
+        {
+            current = FPHead;
+            for(vector<char>::iterator j = (*i).begin(); j != (*i).end(); j++)
+            {
+                FPTreeNode* next = current->isExisted(*j);
+                if(next != NULL)
+                {
+                    next->raiseFrequency(1);
+                    current = next;
+                    cout<<"EXIST:"<<current->getItem()<<ends<<current->getFrequency()<<endl;
+                }
+                else
+                {
+                    next = new FPTreeNode(*j, 1);
+                    current->addNext(next);
+                    current = next;
+                    cout<<"NOT EXIST:"<<current->getItem()<<ends<<current->getFrequency()<<endl;
+                }
+            }
+        }
+        return FPHead;
+    }
+
+    void TraverseFPTree(FPTreeNode* current)
+    {
+        cout<<current->getItem()<<ends<<current->getFrequency()<<endl;
+        for(int i = 0; i <= current->getNextAmount(); i ++)
+            TraverseFPTree(current->getNextNode(i));
     }
 };
 
@@ -138,5 +243,7 @@ int main()
 {
     FP *fp = new FP("PPTexample.dat");
     fp->MeetSupport(MIN_SUP_COUNT);
+    fp->BuildFPTree();
+    fp->TraverseFPTree(fp->getFPTreeHead());
     return 0;
 }

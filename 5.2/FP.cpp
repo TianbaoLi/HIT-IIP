@@ -7,7 +7,7 @@
 #include<algorithm>
 using namespace std;
 
-const int MIN_SUP_COUNT = 3;
+const int MIN_SUP_COUNT = 2;
 const int MAX_NODE_AMOUNT = 20;
 
 class FPTreeNode
@@ -133,6 +133,8 @@ private:
     vector<vector<char> > items;
     vector<ItemNode> itemHeadList;
     FPTreeNode *FPHead;
+    map<char, vector<char> > itemPrefix;
+    vector<char> fathersOnBranch;
 
 public:
     FP(string dataFile)
@@ -240,20 +242,54 @@ public:
         return FPHead;
     }
 
-    void TraverseFPTree(FPTreeNode* current)
+    void BuildItemList(FPTreeNode* current)
     {
         //cout<<current->getItem()<<ends<<current->getFrequency()<<endl;
         for(vector<ItemNode>::iterator iter = itemHeadList.begin(); iter != itemHeadList.end(); iter ++)
             if((*iter).getItem() == current->getItem())
                 (*iter).addTreeNode(*current);
         for(int i = 0; i <= current->getNextAmount(); i ++)
-            TraverseFPTree(current->getNextNode(i));
+            BuildItemList(current->getNextNode(i));
     }
 
-    void showItemHeadList()
+    void ShowItemHeadList()
     {
         for(vector<ItemNode>::iterator iter = itemHeadList.begin(); iter != itemHeadList.end(); iter ++)
             (*iter).showTreeNode();
+    }
+
+    void GenPrefix(FPTreeNode* current)
+    {
+        char currentChar = current->getItem();
+        for(vector<char>::iterator iter = fathersOnBranch.begin(); iter != fathersOnBranch.end(); iter ++)
+        {
+            bool existed = false;
+            for(vector<char>::iterator j = itemPrefix[*iter].begin(); j != itemPrefix[*iter].end(); j ++)
+                if(currentChar == *j)
+                {
+                    existed = true;
+                    break;
+                }
+            if(existed == false)
+                itemPrefix[*iter].push_back(currentChar);
+        }
+        for(int i = 0; i <= current->getNextAmount(); i ++)
+        {
+            fathersOnBranch.push_back(current->getItem());
+            GenPrefix(current->getNextNode(i));
+            fathersOnBranch.pop_back();
+        }
+    }
+
+    void fun()
+    {
+        for(map<char, vector<char> >::iterator i = itemPrefix.begin(); i != itemPrefix.end(); i ++)
+        {
+            cout<<i->first<<":"<<endl;
+            for(vector<char>::iterator j = itemPrefix[i->first].begin(); j != itemPrefix[i->first].end(); j ++)
+                cout<<*j<<ends;
+            cout<<endl;
+        }
     }
 };
 
@@ -262,7 +298,9 @@ int main()
     FP *fp = new FP("PPTexample.dat");
     fp->MeetSupport(MIN_SUP_COUNT);
     fp->BuildFPTree();
-    fp->TraverseFPTree(fp->getFPTreeHead());
-    fp->showItemHeadList();
+    fp->BuildItemList(fp->getFPTreeHead());
+    //fp->ShowItemHeadList();
+    fp->GenPrefix(fp->getFPTreeHead());
+    fp->fun();
     return 0;
 }
